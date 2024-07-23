@@ -1,0 +1,39 @@
+name: 'Dokploy Deployment'
+description: 'Trigger a Dokploy deployment'
+branding:
+  icon: 'upload-cloud'
+  color: 'gray-dark'
+inputs:
+  dokploy_url:
+    description: 'Dokploy base URL, e.g. https://dokploy.example.com'
+    required: true
+  auth_token:
+    description: 'Dokploy authentication token'
+    required: true
+  application_id:
+    description: 'Dokploy application ID'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Trigger Dokploy deployment
+      shell: bash
+      env:
+        DOKPLOY_URL: ${{ inputs.dokploy_url }}
+        DOKPLOY_AUTH_TOKEN: ${{ inputs.auth_token }}
+        DOKPLOY_APPLICATION_ID: ${{ inputs.application_id }}
+      run: |
+        response=$(curl -X 'POST' \
+          "$DOKPLOY_URL/api/application.deploy" \
+          -H 'accept: application/json' \
+          -H 'Content-Type: application/json' \
+          -H "Authorization: Bearer $DOKPLOY_AUTH_TOKEN" \
+          -d "{\"applicationId\": \"$DOKPLOY_APPLICATION_ID\"}" \
+          -w "%{http_code}" \
+          -o /dev/null \
+          -s)
+        
+        if [ "$response" -ne 200 ]; then
+          echo "Deployment failed with status code: $response"
+          exit 1
+        fi
