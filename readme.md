@@ -18,6 +18,13 @@ This GitHub Action triggers a deployment on Dokploy.
 
 e.g. `https://server.example.com`
 
+
+### `service_type`
+
+**Optional** Type of Dokploy service (`compose` or `application`)
+
+**Default** `application`
+
 ## Usage
 
 To use this action, include it in your workflow file as follows:
@@ -40,6 +47,7 @@ jobs:
         auth_token: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
         application_id: ${{ secrets.DOKPLOY_APPLICATION_ID }}
         dokploy_url: ${{ secrets.DOKPLOY_URL }}
+        service_type: application
 ```
 
 ## Contributing

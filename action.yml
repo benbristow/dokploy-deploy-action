@@ -1,21 +1,39 @@
-name: 'Dokploy Deployment'
-description: 'Trigger a Dokploy deployment'
+name: "Dokploy Deployment"
+description: "Trigger a Dokploy deployment"
 branding:
-  icon: 'upload-cloud'
-  color: 'gray-dark'
+  icon: "upload-cloud"
+  color: "gray-dark"
 inputs:
   dokploy_url:
-    description: 'Dokploy base URL, e.g. https://dokploy.example.com'
+    description: "Dokploy base URL, e.g. https://dokploy.example.com"
     required: true
   auth_token:
-    description: 'Dokploy authentication token'
+    description: "Dokploy authentication token"
     required: true
   application_id:
-    description: 'Dokploy application ID'
+    description: "Dokploy application/compose ID"
     required: true
+  service_type:
+    description: "Type of service (application,compose)"
+    required: false
+    default: "application"
+
 runs:
   using: "composite"
   steps:
+    - name: Validate deployment type
+      shell: bash
+      run: |
+        case "${{ inputs.service_type }}" in
+          application|compose)
+            echo "Valid service type: ${{ inputs.service_type }}"
+            ;;
+          *)
+            echo "Invalid service type: ${{ inputs.service_type }}"
+            exit 1
+            ;;
+        esac
+
     - name: Trigger Dokploy deployment
       shell: bash
       env:
@@ -24,15 +42,15 @@ runs:
         DOKPLOY_APPLICATION_ID: ${{ inputs.application_id }}
       run: |
         response=$(curl -X 'POST' \
-          "$DOKPLOY_URL/api/application.deploy" \
+          "$DOKPLOY_URL/api/${{ inputs.service_type }}.deploy" \
           -H 'accept: application/json' \
           -H 'Content-Type: application/json' \
           -H "Authorization: Bearer $DOKPLOY_AUTH_TOKEN" \
-          -d "{\"applicationId\": \"$DOKPLOY_APPLICATION_ID\"}" \
+          -d "{\"${{ inputs.service_type }}Id\": \"$DOKPLOY_APPLICATION_ID\"}" \
           -w "%{http_code}" \
           -o /dev/null \
           -s)
-        
+
         if [ "$response" -ne 200 ]; then
           echo "Deployment failed with status code: $response"
           exit 1
