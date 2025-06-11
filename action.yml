@@ -34,7 +34,7 @@ runs:
           "$DOKPLOY_URL/api/application.deploy" \
           -H 'accept: application/json' \
           -H 'Content-Type: application/json' \
-          -H "Authorization: Bearer $DOKPLOY_AUTH_TOKEN" \
+          -H "x-api-key: $DOKPLOY_AUTH_TOKEN" \
           -d "{\"applicationId\": \"$DOKPLOY_APPLICATION_ID\"}" \
           -w "%{http_code}" \
           -o /dev/null \
@@ -59,7 +59,7 @@ runs:
             deployment_response=$(curl -X 'GET' \
               "$DOKPLOY_URL/api/deployment.all?applicationId=$DOKPLOY_APPLICATION_ID" \
               -H 'accept: application/json' \
-              -H "Authorization: Bearer $DOKPLOY_AUTH_TOKEN" \
+              -H "x-api-key: $DOKPLOY_AUTH_TOKEN" \
               -s)
             
             if [ $? -ne 0 ]; then
