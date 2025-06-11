@@ -18,6 +18,10 @@ This GitHub Action triggers a deployment on Dokploy.
 
 e.g. `https://server.example.com`
 
+### `wait_for_completion`
+
+**Optional** Wait for the deployment to finish before completing the action. When set to `true`, the action will poll the deployment status every second for up to 10 minutes. If the deployment fails, the action will exit with an error. Default: `false`.
+
 ## Usage
 
 To use this action, include it in your workflow file as follows:
@@ -40,6 +44,20 @@ jobs:
         auth_token: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
         application_id: ${{ secrets.DOKPLOY_APPLICATION_ID }}
         dokploy_url: ${{ secrets.DOKPLOY_URL }}
+```
+
+### With wait for completion
+
+To wait for the deployment to finish:
+
+```yaml
+    - name: Dokploy Deployment
+      uses: benbristow/dokploy-deploy-action@0.0.1
+      with:
+        auth_token: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
+        application_id: ${{ secrets.DOKPLOY_APPLICATION_ID }}
+        dokploy_url: ${{ secrets.DOKPLOY_URL }}
+        wait_for_completion: true
 ```
 
 ## Contributing

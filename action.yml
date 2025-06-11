@@ -13,6 +13,10 @@ inputs:
   application_id:
     description: 'Dokploy application ID'
     required: true
+  wait_for_completion:
+    description: 'Wait for deployment to finish (default: false)'
+    required: false
+    default: 'false'
 runs:
   using: "composite"
   steps:
@@ -22,7 +26,10 @@ runs:
         DOKPLOY_URL: ${{ inputs.dokploy_url }}
         DOKPLOY_AUTH_TOKEN: ${{ inputs.auth_token }}
         DOKPLOY_APPLICATION_ID: ${{ inputs.application_id }}
+        WAIT_FOR_COMPLETION: ${{ inputs.wait_for_completion }}
       run: |
+        echo "Triggering deployment for application ID: $DOKPLOY_APPLICATION_ID"
+        
         response=$(curl -X 'POST' \
           "$DOKPLOY_URL/api/application.deploy" \
           -H 'accept: application/json' \
@@ -35,5 +42,63 @@ runs:
         
         if [ "$response" -ne 200 ]; then
           echo "Deployment failed with status code: $response"
+          exit 1
+        fi
+        
+        echo "Deployment triggered successfully"
+        
+        # Wait for completion if requested
+        if [ "$WAIT_FOR_COMPLETION" = "true" ]; then
+          echo "Waiting for deployment to complete..."
+          
+          timeout=600  # 10 minutes in seconds
+          elapsed=0
+          
+          while [ $elapsed -lt $timeout ]; do
+            # Get deployment status
+            deployment_response=$(curl -X 'GET' \
+              "$DOKPLOY_URL/api/deployment.all?applicationId=$DOKPLOY_APPLICATION_ID" \
+              -H 'accept: application/json' \
+              -H "Authorization: Bearer $DOKPLOY_AUTH_TOKEN" \
+              -s)
+            
+            if [ $? -ne 0 ]; then
+              echo "Failed to fetch deployment status"
+              exit 1
+            fi
+            
+            # Extract the latest deployment status using jq
+            latest_status=$(echo "$deployment_response" | jq -r '.[0].status // "unknown"')
+            
+            if [ "$latest_status" = "unknown" ] || [ "$latest_status" = "null" ]; then
+              echo "Could not determine deployment status"
+              exit 1
+            fi
+            
+            echo "Current deployment status: $latest_status"
+            
+            case "$latest_status" in
+              "done")
+                echo "Deployment completed successfully!"
+                exit 0
+                ;;
+              "error")
+                echo "Deployment failed with error status"
+                exit 1
+                ;;
+              "running")
+                echo "Deployment still running, waiting..."
+                sleep 1
+                elapsed=$((elapsed + 1))
+                ;;
+              *)
+                echo "Unknown deployment status: $latest_status"
+                sleep 1
+                elapsed=$((elapsed + 1))
+                ;;
+            esac
+          done
+          
+          echo "Deployment timeout reached (10 minutes). Current status: $latest_status"
           exit 1
         fi
