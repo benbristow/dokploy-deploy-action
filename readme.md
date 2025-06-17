@@ -49,6 +49,7 @@ jobs:
           application_id: ${{ secrets.DOKPLOY_APPLICATION_ID }}
           dokploy_url: ${{ secrets.DOKPLOY_URL }}
 ```
+Note: If you encounter persistent 403 errors, it might be related to Cloudflare bot detection blocking the requests, so it’s worth checking on that separately.
 
 ## Contributing
 
