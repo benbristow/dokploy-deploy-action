@@ -26,6 +26,13 @@ Example: `https://dokploy.example.com`
 
 ---
 
+
+### `service_type`
+
+**Optional** Type of Dokploy service (`compose` or `application`)
+
+**Default** `application`
+
 ## Usage
 
 Include this action in your GitHub workflow file like this:
@@ -39,15 +46,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Trigger Dokploy Deployment
-        uses: benbristow/dokploy-deploy-action@0.1.0
-        with:
-          auth_token: ${{ secrets.DOKPLOY_API_TOKEN }}
-          application_id: ${{ secrets.DOKPLOY_APPLICATION_ID }}
-          dokploy_url: ${{ secrets.DOKPLOY_URL }}
+    - name: Dokploy Deployment
+      uses: benbristow/dokploy-deploy-action@0.2.0
+      with:
+        auth_token: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
+        application_id: ${{ secrets.DOKPLOY_APPLICATION_ID }}
+        dokploy_url: ${{ secrets.DOKPLOY_URL }}
+        service_type: application
 ```
 Note: If you encounter persistent 403 errors, it might be related to Cloudflare bot detection blocking the requests, so it’s worth checking on that separately.
 

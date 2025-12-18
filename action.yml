@@ -1,23 +1,36 @@
-name: 'Dokploy Deployment'
-description: 'Trigger a Dokploy deployment'
+name: "Dokploy Deployment"
+description: "Trigger a Dokploy deployment"
 branding:
   icon: 'upload-cloud'
   color: 'gray-dark'
 
 inputs:
   dokploy_url:
-    description: 'Dokploy base URL, e.g. https://dokploy.example.com'
+    description: "Dokploy base URL, e.g. https://dokploy.example.com"
     required: true
   api_token:
     description: 'Dokploy authentication token'
     required: true
   application_id:
-    description: 'Dokploy application ID'
+    description: "Dokploy application/compose ID"
     required: true
 
 runs:
   using: "composite"
   steps:
+    - name: Validate deployment type
+      shell: bash
+      run: |
+        case "${{ inputs.service_type }}" in
+          application|compose)
+            echo "Valid service type: ${{ inputs.service_type }}"
+            ;;
+          *)
+            echo "Invalid service type: ${{ inputs.service_type }}"
+            exit 1
+            ;;
+        esac
+
     - name: Trigger Dokploy deployment
       shell: bash
       env:
@@ -26,15 +39,12 @@ runs:
         DOKPLOY_APPLICATION_ID: ${{ inputs.application_id }}
       run: |
         response=$(curl -X POST \
-          "${DOKPLOY_URL}/api/trpc/application.deploy" \
+          "$DOKPLOY_URL/api/${{ inputs.service_type }}.deploy" \
           -H 'accept: application/json' \
           -H "x-api-key:${DOKPLOY_API_TOKEN}" \
           -H 'Content-Type: application/json' \
-          -d '{
-            "json": {
-              "applicationId": "'"${DOKPLOY_APPLICATION_ID}"'"
-            }
-          }' \
+          -H "Authorization: Bearer $DOKPLOY_AUTH_TOKEN" \
+          -d "{\"${{ inputs.service_type }}Id\": \"$DOKPLOY_APPLICATION_ID\"}" \
           -w "%{http_code}" \
           -o /dev/null \
           -s)
