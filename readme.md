@@ -24,9 +24,6 @@ then your application ID is `hdoihUG0FmYC8GdoFEc`.
 The base URL of your Dokploy instance, without a trailing slash.  
 Example: `https://dokploy.example.com`
 
----
-
-
 ### `service_type`
 
 **Optional** Type of Dokploy service (`compose` or `application`)
