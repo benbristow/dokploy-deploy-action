@@ -1,22 +1,19 @@
 name: "Dokploy Deployment"
 description: "Trigger a Dokploy deployment"
 branding:
-  icon: "upload-cloud"
-  color: "gray-dark"
+  icon: 'upload-cloud'
+  color: 'gray-dark'
+
 inputs:
   dokploy_url:
     description: "Dokploy base URL, e.g. https://dokploy.example.com"
     required: true
-  auth_token:
-    description: "Dokploy authentication token"
+  api_token:
+    description: 'Dokploy authentication token'
     required: true
   application_id:
     description: "Dokploy application/compose ID"
     required: true
-  service_type:
-    description: "Type of service (application,compose)"
-    required: false
-    default: "application"
 
 runs:
   using: "composite"
@@ -38,12 +35,13 @@ runs:
       shell: bash
       env:
         DOKPLOY_URL: ${{ inputs.dokploy_url }}
-        DOKPLOY_AUTH_TOKEN: ${{ inputs.auth_token }}
+        DOKPLOY_API_TOKEN: ${{ inputs.api_token }}
         DOKPLOY_APPLICATION_ID: ${{ inputs.application_id }}
       run: |
-        response=$(curl -X 'POST' \
+        response=$(curl -X POST \
           "$DOKPLOY_URL/api/${{ inputs.service_type }}.deploy" \
           -H 'accept: application/json' \
+          -H "x-api-key:${DOKPLOY_API_TOKEN}" \
           -H 'Content-Type: application/json' \
           -H "Authorization: Bearer $DOKPLOY_AUTH_TOKEN" \
           -d "{\"${{ inputs.service_type }}Id\": \"$DOKPLOY_APPLICATION_ID\"}" \
@@ -54,4 +52,6 @@ runs:
         if [ "$response" -ne 200 ]; then
           echo "Deployment failed with status code: $response"
           exit 1
+        else
+          echo "Deployment triggered successfully with status code: $response"
         fi
