@@ -47,7 +47,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Dokploy Deployment
-      uses: benbristow/dokploy-deploy-action@0.2.0
+      uses: benbristow/dokploy-deploy-action@0.3.0
       with:
         auth_token: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
         application_id: ${{ secrets.DOKPLOY_APPLICATION_ID }}
