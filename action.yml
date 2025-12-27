@@ -14,6 +14,10 @@ inputs:
   application_id:
     description: "Dokploy application/compose ID"
     required: true
+  service_type:
+    description: "Type of Dokploy service (compose or application)"
+    required: false
+    default: "application"
 
 runs:
   using: "composite"
