@@ -30,6 +30,20 @@ Example: `https://dokploy.example.com`
 
 **Default** `application`
 
+### `title`
+
+**Optional** Deployment title shown in the Dokploy deployments tab.  
+When left empty, Dokploy uses its default title (`Manual deployment`).
+
+### `description`
+
+**Optional** Deployment description shown below the title in the Dokploy deployments tab.  
+When left empty, no description is set.
+
+## Requirements
+
+This action builds its request body with [`jq`](https://jqlang.github.io/jq/), which is preinstalled on GitHub-hosted runners. On self-hosted runners, make sure `jq` is available on the `PATH`.
+
 ## Usage
 
 Include this action in your GitHub workflow file like this:
@@ -53,6 +67,8 @@ jobs:
         application_id: ${{ secrets.DOKPLOY_APPLICATION_ID }}
         dokploy_url: ${{ secrets.DOKPLOY_URL }}
         service_type: application
+        title: "Deploy ${{ github.sha }}"
+        description: "Triggered by ${{ github.actor }} via GitHub Actions"
 ```
 Note: If you encounter persistent 403 errors, it might be related to Cloudflare bot detection blocking the requests, so it’s worth checking on that separately.
 

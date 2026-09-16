@@ -18,6 +18,14 @@ inputs:
     description: "Type of Dokploy service (compose or application)"
     required: false
     default: "application"
+  title:
+    description: "Deployment title shown in the Dokploy deployments tab (defaults to 'Manual deployment' if empty)"
+    required: false
+    default: ""
+  description:
+    description: "Deployment description shown below the title in the Dokploy deployments tab"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -41,14 +49,32 @@ runs:
         DOKPLOY_URL: ${{ inputs.dokploy_url }}
         DOKPLOY_API_TOKEN: ${{ inputs.api_token }}
         DOKPLOY_APPLICATION_ID: ${{ inputs.application_id }}
+        DEPLOY_TITLE: ${{ inputs.title }}
+        DEPLOY_DESCRIPTION: ${{ inputs.description }}
       run: |
+        if ! command -v jq >/dev/null 2>&1; then
+          echo "jq is required to build the deployment payload but was not found on this runner"
+          exit 1
+        fi
+
+        # Build the JSON payload with jq so user-supplied values are escaped correctly.
+        # title/description are only included when non-empty, so Dokploy keeps its defaults otherwise.
+        payload=$(jq -n \
+          --arg idKey "${{ inputs.service_type }}Id" \
+          --arg id "$DOKPLOY_APPLICATION_ID" \
+          --arg title "$DEPLOY_TITLE" \
+          --arg description "$DEPLOY_DESCRIPTION" \
+          '{ ($idKey): $id }
+            + (if $title != "" then { title: $title } else {} end)
+            + (if $description != "" then { description: $description } else {} end)')
+
         response=$(curl -X POST \
           "$DOKPLOY_URL/api/${{ inputs.service_type }}.deploy" \
           -H 'accept: application/json' \
           -H "x-api-key:${DOKPLOY_API_TOKEN}" \
           -H 'Content-Type: application/json' \
           -H "Authorization: Bearer $DOKPLOY_AUTH_TOKEN" \
-          -d "{\"${{ inputs.service_type }}Id\": \"$DOKPLOY_APPLICATION_ID\"}" \
+          -d "$payload" \
           -w "%{http_code}" \
           -o /dev/null \
           -s)
